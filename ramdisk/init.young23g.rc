@@ -1,0 +1,32 @@
+import init.young23g_base.rc
+import init.wifi.rc
+
+on init
+# Preload mounting
+    mkdir /preload 0771 system system
+
+
+
+# for BT-PANU
+service dhcpcd_bt-pan /system/bin/dhcpcd -BKL
+    class main
+    disabled
+    oneshot
+
+service iprenew_bt-pan /system/bin/dhcpcd -n
+    class main
+    disabled
+    oneshot
+
+# Preload Partition Mounting
+# umount service
+service umount_service /system/bin/umount /preload
+    disabled
+    oneshot
+
+on property:persist.sys.storage_preload=1
+    mount ext4 /dev/block/mmcblk0p19 /preload nosuid nodev noatime wait ro
+    setprop storage.preload.complete 1
+
+on property:persist.sys.storage_preload=0
+    start umount_service
